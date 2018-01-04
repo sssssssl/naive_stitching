@@ -31,6 +31,7 @@ for img in img_list[1:]:
     shift_x = shift_y = 0
     # transformed img_curr start location is above or left of img
     # we need to shift the img and img_curr right or down
+    # add translation component to affine matrix to shift images.
     if offset_x < 0:
         H[0][2] += abs(offset_x)
         shift_x = abs(offset_x)
@@ -44,6 +45,7 @@ for img in img_list[1:]:
         max(img_height+shift_y, y_max)
     )
     img_warped = cv2.warpAffine(img_curr, H, new_size)
+    # here we do direct stitching, but actually need blending.
     img_warped[shift_y:shift_y+img_height, shift_x:shift_x+img_width] = img
     img_curr = img_warped
 
