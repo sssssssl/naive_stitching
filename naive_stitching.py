@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 
 # naive stitching, from left to right
-# left image overlays right image, this is not so good.
+# constantly transform left image to right image space
+# and attach right image to current warped-image
 
 sm = SiftMatcher()
 
@@ -24,25 +25,26 @@ img_curr = img_list[0]
 for img in img_list[1:]:
     img_height, img_width = img.shape[:2]
     curr_height, curr_width = img_curr.shape[:2]
-    H = sm.computeH(img_curr, img)
+    # h transforms img_curr to img
+    H = sm.computeH(img, img_curr)
     offset_x, offset_y = np.dot(H, np.array([0, 0, 1])).astype(int)
     shift_x = shift_y = 0
-    # transformed img start location is above or left of img_curr
-    # we need to shift the img and img_curr down
+    # transformed img_curr start location is above or left of img
+    # we need to shift the img and img_curr right or down
     if offset_x < 0:
-        H[0][1] += abs(offset_y)
+        H[0][2] += abs(offset_x)
         shift_x = abs(offset_x)
     if offset_y < 0:
-        H[0][2] += abs(offset_y)
+        H[1][2] += abs(offset_y)
         shift_y = abs(offset_y)
 
-    x_max, y_max = np.dot(H, np.array([img_width, img_height, 1])).astype(int)
+    x_max, y_max = np.dot(H, np.array([curr_width, curr_height, 1])).astype(int)
     new_size = (
-        max(curr_width+shift_y, x_max),
-        max(curr_height+shift_y, y_max)
+        max(img_width+shift_x, x_max),
+        max(img_height+shift_y, y_max)
     )
-    img_warped = cv2.warpAffine(img, H, new_size)
-    img_warped[shift_y:shift_y+curr_height, shift_x:shift_x+curr_width] = img_curr
+    img_warped = cv2.warpAffine(img_curr, H, new_size)
+    img_warped[shift_y:shift_y+img_height, shift_x:shift_x+img_width] = img
     img_curr = img_warped
 
 cv2.imshow('res', img_curr)
