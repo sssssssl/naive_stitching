@@ -5,17 +5,14 @@ import numpy as np
 class SiftMatcher(object):
     def __init__(self):
         self.sift = cv2.xfeatures2d.SIFT_create()
-        FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        search_params = dict(checks = 50)
-        self.flann = cv2.FlannBasedMatcher(index_params, search_params)
+        self.bf = cv2.BFMatcher_create()
 
     def detect_sift(self, img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         kps, des = self.sift.detectAndCompute(gray, None)
         return (kps, des)
 
-    def match(self, sift1, sift2):
+    def bfMatch(self, sift1, sift2):
         """
         Given SIFT attributes of 2 images(keypoint list and descriptor list), 
         match keypoints according to descriptor distance,
@@ -24,16 +21,12 @@ class SiftMatcher(object):
         """
         kps1, des1 = sift1
         kps2, des2 = sift2
-        matches = self.flann.knnMatch(des1,des2,k=2)
-        # store all the good matches as per Lowe's ratio test.
-        good = []
-        for m,n in matches:
-            if m.distance < 0.7*n.distance:
-                good.append(m)
+        matches = self.bf.match(des1, des2)
+        matches = sorted(matches, key=lambda x: x.distance)
         # list containing (x, y) of keypoints
         kp1_pos = []
         kp2_pos = []
-        for m in good:
+        for m in matches[:30]:
             kp1, kp2 = kps1[m.queryIdx], kps2[m.trainIdx]
             kp1_pos.append(kp1.pt)
             kp2_pos.append(kp2.pt)
@@ -61,25 +54,13 @@ class SiftMatcher(object):
 
     def computeH(self, img1, img2):
         """
-        compute transformation matrix from img2 to img1 by least square fitting.
-        returns a 2x3 affine matrix
+        compute transformation matrix from img2 to img1
         """
         sift1 = self.detect_sift(img1)
         sift2 = self.detect_sift(img2)
-        kp1_pos, kp2_pos = self.match(sift1, sift2)
+        kp1_pos, kp2_pos = self.bfMatch(sift1, sift2)
         H = self.fitAffineMatrix(kp1_pos, kp2_pos)
         return H
-
-    def computeH_RANSAC(self, img1, img2):
-        """
-        compute transformation matrix from img2 to img1 by OpenCV utlities(RANSAC).
-        returns a 3x3 homography matrix
-        """
-        sift1 = self.detect_sift(img1)
-        sift2 = self.detect_sift(img2)
-        kp1_pos, kp2_pos = self.match(sift1, sift2)
-        H, s = cv2.findHomography(kp1_pos, kp2_pos, cv2.RANSAC, 4)
-
 
 
 if __name__ == '__main__':
