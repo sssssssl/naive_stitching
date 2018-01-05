@@ -70,16 +70,6 @@ class SiftMatcher(object):
         H = self.fitAffineMatrix(kp1_pos, kp2_pos)
         return H
 
-    def computeH_RANSAC(self, img1, img2):
-        """
-        compute transformation matrix from img2 to img1 by OpenCV utlities(RANSAC).
-        returns a 3x3 homography matrix
-        """
-        sift1 = self.detect_sift(img1)
-        sift2 = self.detect_sift(img2)
-        kp1_pos, kp2_pos = self.match(sift1, sift2)
-        H, s = cv2.findHomography(kp1_pos, kp2_pos, cv2.RANSAC, 4)
-
 
 
 if __name__ == '__main__':
