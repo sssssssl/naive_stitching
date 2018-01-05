@@ -15,6 +15,7 @@ path_list = [
     './images/yosemite4.jpg',
 ]
 
+
 img_list = []
 
 for p in path_list:
@@ -22,6 +23,9 @@ for p in path_list:
     img_list.append(img)
 
 img_curr = img_list[0]
+transform_list = []
+img_warped_list = []
+
 for img in img_list[1:]:
     img_height, img_width = img.shape[:2]
     curr_height, curr_width = img_curr.shape[:2]
@@ -39,16 +43,25 @@ for img in img_list[1:]:
         H[1][2] += abs(offset_y)
         shift_y = abs(offset_y)
 
-    x_max, y_max = np.dot(H, np.array([curr_width, curr_height, 1])).astype(int)
+    x_max, y_max = np.dot(
+        H,
+        np.array([curr_width, curr_height, 1])
+    ).astype(int)
     new_size = (
-        max(img_width+shift_x, x_max),
-        max(img_height+shift_y, y_max)
+        max(img_width + shift_x, x_max),
+        max(img_height + shift_y, y_max)
     )
     img_warped = cv2.warpAffine(img_curr, H, new_size)
+    transform_list.append({'H': H, 'size': new_size})
+    img_warped_list.append(img_warped)
     # here we do direct stitching, but actually need blending.
-    img_warped[shift_y:shift_y+img_height, shift_x:shift_x+img_width] = img
+    img_warped[shift_y:shift_y + img_height, shift_x:shift_x + img_width] = img
+    # cv2.imwrite('res{}.jpg'.format(i), img_curr)
     img_curr = img_warped
 
-cv2.imshow('res', img_curr)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+# cv2.imshow('res', img_curr)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# cv2.imwrite('res.jpg', img_curr)
