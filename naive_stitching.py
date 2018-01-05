@@ -14,6 +14,15 @@ def main():
         exit(0)
 
     path_list = sys.argv[2:]
+
+    # # for testing
+    # path_list = [
+    #     './images/yosemite1.jpg',
+    #     './images/yosemite2.jpg',
+    #     './images/yosemite3.jpg',
+    #     './images/yosemite4.jpg',
+    # ]
+
     sm = SiftMatcher()
     img_list = []
 
@@ -59,11 +68,12 @@ def main():
         # cv2.imwrite('res{}.jpg'.format(i), img_curr)
         img_curr = img_warped
 
-        # cv2.imshow('res', img_curr)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+    # # show result
+    # cv2.imshow('res', img_curr)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
-        cv2.imwrite('res.jpg', img_curr)
+    cv2.imwrite('result.jpg', img_curr)
 
 
 if __name__ == '__main__':
